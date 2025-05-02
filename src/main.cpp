@@ -579,7 +579,7 @@ void handleWipeCommands()
   configServer.send(200, "text/html", "Wiped");
 }
 
-void handleLoadCommands()
+void handleUploadCommands()
 {
   String s = "<html><head><title>esp-eBus adapter</title>\n";
     s += "<meta name='viewport' content='width=device-width, initial-scale=1, user-scalable=no'>\n";
@@ -614,7 +614,12 @@ void handleLoadCommands()
   configServer.send(200, "text/html", s);
 }
 
-
+void handleDownloadCommands() {
+  String j = "{ 'commands': ";
+         j += store.getCommands().c_str();
+         j += " }";
+  configServer.send(200, "application/json", j );
+}
 
 void handleCommands()
 {
@@ -623,10 +628,11 @@ void handleCommands()
        "user-scalable=no\"/>";
   s += "</head><body>";
   s += "<h3>Commands</h3>";
-  s += "<a href='/commands/load'>Load</a><br>";
   s += "<a href='/commands/save'>Save</a><br>";
   s += "<a href='/commands/list'>List</a><br>";
   s += "<a href='/commands/wipe'>Wipe</a><br>";
+  s += "<a href='/commands/upload'>Upload</a><br>";
+  s += "<a href='/commands/download'>Download</a><br>";
   s += "<br>";
   s += "For more info see project page: <a "
        "href='https://github.com/danielkucera/esp-arduino-ebus'>https://"
@@ -763,9 +769,10 @@ void setup() {
   configServer.on("/commands", [] { handleCommands(); });
   configServer.on("/commands/insert", HTTP_POST, [] { handleInsertCommands(); });
   configServer.on("/commands/list", [] { handleListCommands(); });
-  configServer.on("/commands/load", [] { handleLoadCommands(); });
   configServer.on("/commands/save", [] { handleSaveCommands(); });
   configServer.on("/commands/wipe", [] { handleWipeCommands(); });
+  configServer.on("/commands/upload", [] { handleUploadCommands(); });
+  configServer.on("/commands/download", [] { handleDownloadCommands(); });
 #endif
 
   configServer.on("/config", [] { iotWebConf.handleConfig(); });
