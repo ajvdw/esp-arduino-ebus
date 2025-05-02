@@ -474,10 +474,12 @@ char* status_string() {
   return status;
 }
 
-void handleStatus() { configServer.send(200, "text/plain", status_string()); }
+void handleStatus() 
+{ configServer.send(200, "text/plain", status_string()); 
+}
 
 #ifdef EBUS_INTERNAL
-void handleCommands() {
+void handleListCommands() {
   configServer.send(200, "application/json;charset=utf-8",
                     store.getCommands().c_str());
 }
@@ -550,6 +552,92 @@ void publishValues() {
   nbrErrors = Bus._nbrErrors;
 }
 
+#ifdef EBUS_INTERNAL
+
+void handleInsertCommands()
+{
+  JsonDocument doc;
+  String body = configServer.arg("plain"); 
+ 
+  deserializeJson(doc, body );
+  JsonArray commands = doc["commands"];  
+
+  store.insertCommands( commands );  
+
+  configServer.send(200, "text/html", "OK");
+}
+
+void handleSaveCommands()
+{
+  store.saveCommands();
+  configServer.send(200, "text/html", "Saved");
+}
+
+void handleWipeCommands()
+{
+  store.wipeCommands();
+  configServer.send(200, "text/html", "Wiped");
+}
+
+void handleLoadCommands()
+{
+  String s = "<html><head><title>esp-eBus adapter</title>\n";
+    s += "<meta name='viewport' content='width=device-width, initial-scale=1, user-scalable=no'>\n";
+    s += "</head><body>\n";
+    s += "<h3>Load Commands</h3>\n";
+
+    s += "<input type='file' id='file-upload'>\n";
+    s += "<script type='text/javascript'>\n";
+    s += "  window.onload = function(event) {\n";
+    s += "    document.getElementById('file-upload').addEventListener('change', handleFileSelect, false);\n";
+    s += "  }\n";
+    s += "  function handleFileSelect(event) {\n";
+    s += "    var fileReader = new FileReader();\n";
+    s += "    fileReader.onload = function(event) {\n";
+    s += "      var commands=JSON.parse(event.target.result);\n";
+    s += "      var headers = new Headers();";
+    s += "      headers.append('Accept', 'text/plain');";
+    s += "      headers.append('Content-Type', 'text/plain');";
+    s += "      fetch('/commands/insert', {";
+    s += "        method: 'POST',";
+    s += "        headers: headers,";
+    s += "        body: JSON.stringify(commands),";
+    s += "      });";
+    s += "    }\n";
+    s += "    var file = event.target.files[0];\n";
+    s += "    fileReader.readAsText(file);\n";
+    s += "  }\n";
+
+    s += "</script>\n";
+    s += "</body></html>";
+
+  configServer.send(200, "text/html", s);
+}
+
+
+
+void handleCommands()
+{
+  String s = "<html><head><title>esp-eBus adapter</title>";
+  s += "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1, "
+       "user-scalable=no\"/>";
+  s += "</head><body>";
+  s += "<h3>Commands</h3>";
+  s += "<a href='/commands/load'>Load</a><br>";
+  s += "<a href='/commands/save'>Save</a><br>";
+  s += "<a href='/commands/list'>List</a><br>";
+  s += "<a href='/commands/wipe'>Wipe</a><br>";
+  s += "<br>";
+  s += "For more info see project page: <a "
+       "href='https://github.com/danielkucera/esp-arduino-ebus'>https://"
+       "github.com/danielkucera/esp-arduino-ebus</a>";
+  s += "</body></html>";
+
+  configServer.send(200, "text/html", s);
+
+}
+#endif
+
 void handleRoot() {
   // -- Let IotWebConf test and handle captive portal requests.
   if (iotWebConf.handleCaptivePortal()) {
@@ -561,7 +649,9 @@ void handleRoot() {
        "user-scalable=no\"/>";
   s += "</head><body>";
   s += "<a href='/status'>Adapter status</a><br>";
+  #ifdef EBUS_INTERNAL
   s += "<a href='/commands'>Commands</a><br>";
+  #endif
   s += "<a href='/config'>Configuration</a> - user: admin password: your "
        "configured AP mode password or default: ";
   s += DEFAULT_APMODE_PASS;
@@ -604,7 +694,7 @@ void setup() {
 
   Bus.begin();
 
-  DebugSer.begin(115200);
+  DebugSer.begin(9600);
   DebugSer.setDebugOutput(true);
 
   disableTX();
@@ -675,6 +765,11 @@ void setup() {
 
 #ifdef EBUS_INTERNAL
   configServer.on("/commands", [] { handleCommands(); });
+  configServer.on("/commands/insert", HTTP_POST, [] { handleInsertCommands(); });
+  configServer.on("/commands/list", [] { handleListCommands(); });
+  configServer.on("/commands/load", [] { handleLoadCommands(); });
+  configServer.on("/commands/save", [] { handleSaveCommands(); });
+  configServer.on("/commands/wipe", [] { handleWipeCommands(); });
 #endif
 
   configServer.on("/config", [] { iotWebConf.handleConfig(); });
