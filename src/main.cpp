@@ -625,10 +625,12 @@ void handleUploadCommands()
 }
 
 void handleDownloadCommands() {
-  String j = "{ \"commands\": ";
+  String j = "{ \"id\": \"insert\",\n   \"commands\": ";
          j += store.getCommands().c_str();
-         j += " }";
-  configServer.send(200, "application/json", j );
+         j += "\n}";
+
+  configServer.sendHeader("Content-Disposition","attachment;filename=ebus-commands.json", true);
+  configServer.send(200, "application/x-download", j );
 }
 
 void handleCommands()
