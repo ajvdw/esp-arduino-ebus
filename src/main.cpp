@@ -559,12 +559,21 @@ void handleInsertCommands()
   JsonDocument doc;
   String body = configServer.arg("plain"); 
  
-  deserializeJson(doc, body );
-  JsonArray commands = doc["commands"];  
+  DeserializationError error = deserializeJson(doc, body);
 
-  store.insertCommands( commands );  
-
-  configServer.send(200, "text/html", "OK");
+  if (error)
+    configServer.send(200, "text/html", "ERROR");
+  else
+  {
+    JsonArray commands = doc["commands"].as<JsonArray>();
+    if (commands != nullptr) 
+    {
+      store.insertCommands(commands);  
+      configServer.send(200, "text/html", "OK");
+    }
+    else
+      configServer.send(200, "text/html", "ERROR");
+  }
 }
 
 void handleSaveCommands()
@@ -584,7 +593,7 @@ void handleUploadCommands()
   String s = "<html><head><title>esp-eBus adapter</title>\n";
     s += "<meta name='viewport' content='width=device-width, initial-scale=1, user-scalable=no'>\n";
     s += "</head><body>\n";
-    s += "<h3>Load Commands</h3>\n";
+    s += "<h3>Upload Commands</h3>\n";
 
     s += "<input type='file' id='file-upload'>\n";
     s += "<script type='text/javascript'>\n";
@@ -595,14 +604,15 @@ void handleUploadCommands()
     s += "    var fileReader = new FileReader();\n";
     s += "    fileReader.onload = function(event) {\n";
     s += "      var commands=JSON.parse(event.target.result);\n";
-    s += "      var headers = new Headers();";
-    s += "      headers.append('Accept', 'text/plain');";
-    s += "      headers.append('Content-Type', 'text/plain');";
-    s += "      fetch('/commands/insert', {";
-    s += "        method: 'POST',";
-    s += "        headers: headers,";
-    s += "        body: JSON.stringify(commands),";
-    s += "      });";
+    s += "      var headers = new Headers();\n";
+    s += "      headers.append('Accept', 'text/plain');\n";
+    s += "      headers.append('Content-Type', 'text/plain');\n";
+    s += "      fetch('/commands/insert', {\n";
+    s += "        method: 'POST',\n";
+    s += "        headers: headers,\n";
+    s += "        body: JSON.stringify(commands),\n";
+    s += "      } )\n";
+    s += "      .then( response => {  window.location.href = '/commands'; })\n";
     s += "    }\n";
     s += "    var file = event.target.files[0];\n";
     s += "    fileReader.readAsText(file);\n";
@@ -615,7 +625,7 @@ void handleUploadCommands()
 }
 
 void handleDownloadCommands() {
-  String j = "{ 'commands': ";
+  String j = "{ \"commands\": ";
          j += store.getCommands().c_str();
          j += " }";
   configServer.send(200, "application/json", j );
