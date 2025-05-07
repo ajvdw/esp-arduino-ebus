@@ -20,6 +20,7 @@ struct Command {
   uint32_t interval;        // minimum interval between two commands in seconds
   uint32_t last;            // last time of the successful command
   bool master;              // value of interest is in master or slave part
+  uint32_t divider;   
   size_t position;          // starting byte in interested part
   ebus::Datatype datatype;  // ebus datatype
   std::string topic;        // mqtt topic below "values/"

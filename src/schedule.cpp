@@ -283,59 +283,56 @@ void Schedule::publishValue(Command *command,
                             const std::vector<uint8_t> &value) {
   command->last = millis();
   JsonDocument doc;
+  double scale;
+
+  // Apply divider
+  if( command->divider > 0 )
+    scale = 1.0 / command->divider;
+  else  
+    scale = 1.0;
 
   switch (command->datatype) {
     case ebus::Datatype::BCD:
-      doc["value"] =
-          ebus::byte_2_bcd(ebus::Sequence::range(value, command->position, 1));
+      doc["value"] = scale * ebus::byte_2_bcd( ebus::Sequence::range(value, command->position, 1));
       break;
     case ebus::Datatype::UINT8:
-      doc["value"] = ebus::byte_2_uint8(
-          ebus::Sequence::range(value, command->position, 1));
+      doc["value"] = scale * ebus::byte_2_uint8( ebus::Sequence::range(value, command->position, 1));
       break;
     case ebus::Datatype::INT8:
-      doc["value"] =
-          ebus::byte_2_int8(ebus::Sequence::range(value, command->position, 1));
+      doc["value"] = scale * ebus::byte_2_int8( ebus::Sequence::range(value, command->position, 1));
       break;
     case ebus::Datatype::UINT16:
-      doc["value"] = ebus::byte_2_uint16(
-          ebus::Sequence::range(value, command->position, 2));
+      doc["value"] = scale * ebus::byte_2_uint16( ebus::Sequence::range(value, command->position, 2));
       break;
     case ebus::Datatype::INT16:
-      doc["value"] = ebus::byte_2_int16(
-          ebus::Sequence::range(value, command->position, 2));
+      doc["value"] = scale * ebus::byte_2_int16( ebus::Sequence::range(value, command->position, 2));
       break;
     case ebus::Datatype::UINT32:
-      doc["value"] = ebus::byte_2_uint32(
-          ebus::Sequence::range(value, command->position, 4));
+      doc["value"] = scale * ebus::byte_2_uint32( ebus::Sequence::range(value, command->position, 4));
       break;
     case ebus::Datatype::INT32:
-      doc["value"] = ebus::byte_2_int32(
-          ebus::Sequence::range(value, command->position, 4));
+      doc["value"] = scale * ebus::byte_2_int32( ebus::Sequence::range(value, command->position, 4));
       break;
     case ebus::Datatype::DATA1B:
-      doc["value"] = ebus::byte_2_data1b(
-          ebus::Sequence::range(value, command->position, 1));
+      doc["value"] = scale * ebus::byte_2_data1b( ebus::Sequence::range(value, command->position, 1));
       break;
     case ebus::Datatype::DATA1C:
-      doc["value"] = ebus::byte_2_data1c(
-          ebus::Sequence::range(value, command->position, 1));
+      doc["value"] = scale * ebus::byte_2_data1c( ebus::Sequence::range(value, command->position, 1));
       break;
     case ebus::Datatype::DATA2B:
-      doc["value"] = ebus::byte_2_data2b(
-          ebus::Sequence::range(value, command->position, 2));
+      doc["value"] = scale * ebus::byte_2_data2b( ebus::Sequence::range(value, command->position, 2));
       break;
     case ebus::Datatype::DATA2C:
-      doc["value"] = ebus::byte_2_data2c(
-          ebus::Sequence::range(value, command->position, 2));
+      doc["value"] = scale * ebus::byte_2_data2c( ebus::Sequence::range(value, command->position, 2));
       break;
     case ebus::Datatype::FLOAT:
-      doc["value"] = ebus::byte_2_float(
-          ebus::Sequence::range(value, command->position, 2));
+      doc["value"] = scale * ebus::byte_2_float(  ebus::Sequence::range(value, command->position, 2));
       break;
     default:
       break;
   }
+
+
 
   std::string payload;
   serializeJson(doc, payload);

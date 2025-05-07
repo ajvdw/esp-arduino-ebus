@@ -93,6 +93,7 @@ const std::string Store::getCommands() const {
       obj["active"] = command.active;
       obj["interval"] = command.interval;
       obj["master"] = command.master;
+      obj["divider"] = command.divider;
       obj["position"] = command.position;
       obj["datatype"] = ebus::datatype2string(command.datatype);
       obj["topic"] = command.topic;
@@ -209,6 +210,7 @@ Command Store::createCommand(const JsonDocument &doc) {
   command.interval = doc["interval"].as<uint32_t>();
   command.last = 0;
   command.master = doc["master"].as<bool>();
+  command.divider = doc["divider"].as<uint32_t>();
   command.position = doc["position"].as<size_t>();
   command.datatype = ebus::string2datatype(doc["datatype"].as<const char *>());
   command.topic = doc["topic"].as<std::string>();
@@ -266,6 +268,7 @@ const std::string Store::serializeCommands() const {
       array.add(command.active);
       array.add(command.interval);
       array.add(command.master);
+      array.add(command.divider);
       array.add(command.position);
       array.add(ebus::datatype2string(command.datatype));
       array.add(command.topic);
@@ -305,11 +308,12 @@ void Store::deserializeCommands(const char *payload) {
       tmpDoc["active"] = variant[3];
       tmpDoc["interval"] = variant[4];
       tmpDoc["master"] = variant[5];
-      tmpDoc["position"] = variant[6];
-      tmpDoc["datatype"] = variant[7];
-      tmpDoc["topic"] = variant[8];
-      tmpDoc["ha"] = variant[9];
-      tmpDoc["ha_class"] = variant[10];
+      tmpDoc["divider"] = variant[6];
+      tmpDoc["position"] = variant[7];
+      tmpDoc["datatype"] = variant[8];
+      tmpDoc["topic"] = variant[9];
+      tmpDoc["ha"] = variant[10];
+      tmpDoc["ha_class"] = variant[11];
 
       newCommands.push_back(createCommand(tmpDoc));
     }
@@ -341,6 +345,7 @@ void Store::publishCommand(const Command *command, const bool remove) {
     doc["active"] = command->active;
     doc["interval"] = command->interval;
     doc["master"] = command->master;
+    doc["divider"] = command->divider;
     doc["position"] = command->position;
     doc["datatype"] = ebus::datatype2string(command->datatype);
     doc["topic"] = command->topic;
