@@ -3,3 +3,4 @@
 .piolibdeps
 .vscode/
 src/config.h
+.DS_Store
